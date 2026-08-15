@@ -81,6 +81,9 @@ GET /plugin/ui-filesystem/tree?sessionId=<id>
 5. **树快照有界且会过期**：遍历受深度/条目上限约束，超大仓库只能提示前 N 项；树按会话缓存，会话期间文件增删不实时反映（与 ui-skill 的目录缓存同一取舍）。`connection/reset` 清缓存。
 6. **大小写不敏感匹配**：`@` 检索按 basename 前缀不区分大小写（比 ui-skill 的严格区分更宽容，IDE 惯例）。
 7. **符号链接不列出**：`type 'other'` 跳过（防御目录逃逸与环）。
+8. **中文后 `@` 不触发（已确认接受）**：触发检测的 `boundaryOk` 用 `WORD_CHAR = /[\p{L}\p{N}_]/u`（`ui-input-trigger/src/core/detect.ts`），中文汉字属 `\p{L}`，故「请查看@index」不触发；「请查看，@index」/「hello @index」/行首 `@` 均正常。放开此规则需改 harness 的 detect.ts，用户已确认不改 harness，README 已写明使用提示。
+9. **加载中为纯文字（已确认接受）**：菜单 pending 分组渲染 `t('loading')` 文字行（「正在加载…」），无动画；动画需改 harness 的 MenuView，用户已确认不改。
+10. **失败自动重试一次**：实测发现实例重启窗口内首次 tree 请求可能 404（host 会话 attach 竞态），菜单会因 source-failed 静默关闭。插件在 `candidates` 内对失败自动重试一次（300ms 间隔，菜单保持 pending），仍失败则按管线规则关闭，key 不毒化。
 
 ## 8. 独立工程布局
 

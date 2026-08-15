@@ -186,18 +186,40 @@ describe('tree cache', () => {
     expect(urls).toHaveLength(1)
   })
 
-  it('a failed fetch does not poison the key: the next caller retries', async () => {
+  it('a failed fetch retries once; a persistent failure rejects and does not poison the key', async () => {
+    let failures = 2
+    const { source, urls } = await bench(TREE, true)
+    vi.stubGlobal('fetch', vi.fn(async (url: string): Promise<FetchResult> => {
+      urls.push(String(url))
+      if (failures > 0) {
+        failures -= 1
+        return { ok: false, status: 404, json: async () => ({ error: { code: 'session-not-found', message: 'not attached' } }) }
+      }
+      return { ok: true, status: 200, json: async () => ({ root: { name: 'proj' }, entries: TREE }) }
+    }))
+    // First call: two failed attempts (initial + one retry), then rejection.
+    await expect(source.candidates(proj('s1'), req(''))).rejects.toThrow('session-not-found')
+    expect(urls).toHaveLength(2)
+    // The key was not poisoned: the next caller fetches fresh and succeeds.
+    await expect(source.candidates(proj('s1'), req(''))).resolves.toHaveLength(5)
+    expect(urls).toHaveLength(3)
+  })
+
+  it('a transient first failure recovers inside the same candidates call', async () => {
     let fail = true
     const { source, urls } = await bench(TREE, true)
     vi.stubGlobal('fetch', vi.fn(async (url: string): Promise<FetchResult> => {
       urls.push(String(url))
-      if (fail) return { ok: false, status: 500, json: async () => ({ error: { code: 'boom', message: 'down' } }) }
+      if (fail) {
+        fail = false
+        return { ok: false, status: 404, json: async () => ({ error: { code: 'session-not-found', message: 'not attached' } }) }
+      }
       return { ok: true, status: 200, json: async () => ({ root: { name: 'proj' }, entries: TREE }) }
     }))
-    await expect(source.candidates(proj('s1'), req(''))).rejects.toThrow('down')
-    fail = false
-    await expect(source.candidates(proj('s1'), req(''))).resolves.toHaveLength(5)
+    const items = await source.candidates(proj('s1'), req(''))
+    // One failed attempt, one retry, then the settled tree serves the query.
     expect(urls).toHaveLength(2)
+    expect(items).toHaveLength(5)
   })
 
   it('the scope-birth warm prewarms the session key fire-and-forget', async () => {

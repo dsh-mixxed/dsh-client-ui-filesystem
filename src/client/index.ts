@@ -38,6 +38,9 @@ const TREE_ENDPOINT = '/plugin/ui-filesystem/tree'
 /** UI cap on candidates per query: the menu renders every item, so an empty query must stay bounded. */
 const MAX_CANDIDATES = 50
 
+/** Pause before one retry of a failed tree fetch (host session attach race). */
+const RETRY_DELAY_MS = 300
+
 /** One session's tree fetch: the shared promise plus its own abort handle. */
 interface TreeFetch {
   readonly promise: Promise<readonly FileEntry[]>
@@ -110,7 +113,17 @@ export function apply(ctx: ClientContext): void {
     name: 'filesystem',
     order: 1,
     async candidates(session: ClientSessionContext, { query, signal }) {
-      const entries = await fetchTree(session.sessionId)
+      let entries: readonly FileEntry[]
+      try {
+        entries = await fetchTree(session.sessionId)
+      } catch {
+        // One retry: a freshly started host generation may not have the
+        // session attached yet, and a failed fetch closes the menu silently.
+        // The menu stays pending (loading row) through this second attempt.
+        if (signal.aborted) return []
+        await new Promise(resolve => { setTimeout(resolve, RETRY_DELAY_MS) })
+        entries = await fetchTree(session.sessionId)
+      }
       // Superseded keystroke: the shared fetch stays warm, this caller yields.
       if (signal.aborted) return []
       return filterEntries(entries, query)
