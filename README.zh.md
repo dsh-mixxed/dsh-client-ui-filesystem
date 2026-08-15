@@ -31,16 +31,16 @@
    pnpm run typecheck
    pnpm test
    pnpm run build
-   npm pack          # ui-filesystem-0.1.1.tgz
+   npm pack          # dsh-client-ui-filesystem-0.1.1.tgz
    ```
 
 2. 安装进 profile：
 
    ```sh
-   dsh plugin --profile web add ./ui-filesystem-0.1.1.tgz
+   dsh plugin --profile web add ./dsh-client-ui-filesystem-0.1.1.tgz
    ```
 
-   （或从 profile 目录：`corepack pnpm add ./ui-filesystem-0.1.1.tgz --dir <profile-dir>`）
+   （或从 profile 目录：`corepack pnpm add ./dsh-client-ui-filesystem-0.1.1.tgz --dir <profile-dir>`）
 
 3. 在 `$DSH_HOME/profiles/<name>/cordis.patch.yml` 挂载：
 

@@ -31,16 +31,16 @@ Built as a fully out-of-tree plugin — the deepseek-harness source stays untouc
    pnpm run typecheck
    pnpm test
    pnpm run build
-   npm pack          # ui-filesystem-0.1.1.tgz
+   npm pack          # dsh-client-ui-filesystem-0.1.1.tgz
    ```
 
 2. Install the package into your profile:
 
    ```sh
-   dsh plugin --profile web add ./ui-filesystem-0.1.1.tgz
+   dsh plugin --profile web add ./dsh-client-ui-filesystem-0.1.1.tgz
    ```
 
-   (or from the profile directory: `corepack pnpm add ./ui-filesystem-0.1.1.tgz --dir <profile-dir>`)
+   (or from the profile directory: `corepack pnpm add ./dsh-client-ui-filesystem-0.1.1.tgz --dir <profile-dir>`)
 
 3. Mount it in `$DSH_HOME/profiles/<name>/cordis.patch.yml`:
 
