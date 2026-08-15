@@ -1,44 +1,48 @@
 # ui-filesystem
 
-一个 dsh 插件：在对话窗口输入 `@` 时，检索当前项目（会话工作目录）下的文件与子目录，选中后插入 `@路径` 引用。
+A dsh plugin that adds **`@` project file/directory suggestions** to the chat composer: type `@` to browse the current project (the session's working directory), pick a file or directory, and the draft gains a `@path` reference that ships to the model verbatim.
+
+Built as a fully out-of-tree plugin — the deepseek-harness source stays untouched. It rides the same input-trigger pipeline as ui-skill's `/` (so it coexists with ui-subagent's `@` mentions as a second menu group), and it serves its project tree over its own HTTP route (`ctx.webServer`).
 
 ## Features
 
-- **`@` 触发检索**：与 ui-skill 的 `/` 技能检索同一管线（`ui-input-trigger`），与 ui-subagent 的 `@` 提及并存（菜单中两个分组）。
-- **前缀匹配**：检索只匹配**文件/目录名（basename）前缀**，不匹配路径前缀——`@index` 命中 `src/index.ts` 与 `test/index.ts`，`@src/` 无结果（路径式查询不是本插件语义）。
-- **提示项 UI**：每个候选前显文件/目录名，后显相对路径（如 `index.ts  src/index.ts`）。
-- **引用**：选中后把 `@` token 替换为 `@相对路径 ` 字面量，发送时 prompt 原样携带，模型可用自身 fs 工具读取。
-- **按会话缓存**：每个会话只向 host 请求一次项目树，击键过滤在本地进行；`connection/reset` 后自动重建。
-- **有界遍历**：跳过 `node_modules` / `.git` / 隐藏项（可配置），默认最深 6 层、最多 2000 条；符号链接不列出。
-- **失败自动重试**：树请求失败（如实例刚重启、host 会话尚未就绪）会自动重试一次，菜单保持「正在加载…」状态，不会瞬间消失。
+- **`@` trigger**: same pipeline as ui-skill's `/` (`ui-input-trigger`), shown alongside ui-subagent's `@` mentions as its own menu group
+- **Basename-prefix matching**: the query matches only the file/directory **name** prefix, never the path prefix — `@index` hits `src/index.ts` and `test/index.ts`; path-shaped queries like `@src/` return nothing (by design)
+- **Filename-first rows**: every candidate shows the file/directory name first and the relative path after (e.g. `index.ts  src/index.ts`)
+- **Plain-text references**: picking replaces the `@` token with the literal `@relative/path ` — the prompt ships the same literal and the model resolves the file with its own fs tools
+- **Per-session caching**: each session fetches the bounded project tree once; keystroke filtering happens locally, and `connection/reset` rebuilds the cache
+- **Bounded walk**: skips `node_modules` / `.git` / hidden entries (configurable), caps depth at 6 and entries at 2000, and never lists symlinks
+- **Retry on failure**: a failed tree request (e.g. right after the host restarts, before the session is attached) retries once, keeping the menu in its loading state instead of vanishing
 
-## 使用提示（已知限制，harness 行为）
+## Usage notes (harness behavior, accepted as-is)
 
-- **`@` 的触发位置**：`@` 必须位于行首、空白或标点之后。中文汉字后直接跟 `@` 不会触发（如「请查看@index」无效；「请查看，@index」有效）——触发检测把汉字视为单词字符，该规则在 harness 的 `ui-input-trigger` 中，本插件按约定不改 harness。行内引用建议在 `@` 前加空格或标点。
-- **加载中状态**：项目树首次加载期间，菜单显示「正在加载…」文字行（菜单组件的既有行为，无动画；动画需改 harness 菜单组件，本插件不改）。
-- **无 chip 装饰**：`@路径` 在草稿中不渲染为 chip（装饰扫描只支持单词字符名，见 DESIGN.md §7.1）。
-- **菜单分组标题**：显示原始名 `filesystem`。
-- 已知限制详情：`DESIGN.md` §7。
+- **Where `@` triggers**: the trigger char must sit at the start of the draft, after whitespace, or after punctuation. A Chinese character directly before `@` does **not** trigger (`请查看@index` is a miss; `请查看，@index` works) — the trigger detector treats CJK letters as word characters. That rule lives in the harness's `ui-input-trigger`; this plugin does not modify the harness, so inline references work best with a space or punctuation before `@`.
+- **Loading state**: while the project tree loads, the menu opens immediately with the group's existing text-only loading row (`正在加载…`); an animated spinner would require modifying the harness menu component, which this plugin does not do.
+- **No chip decoration**: `@path` stays plain text in the draft — the decoration scanner only matches word-ish names, so paths never render as chips (DESIGN.md §7.1).
+- **Menu group title**: shows the raw source name `filesystem`.
+- Full boundary list: `DESIGN.md` §7.
 
 ## Install
 
-1. 构建并打包：
+1. Build and pack the plugin:
 
    ```sh
    pnpm install
    pnpm run typecheck
    pnpm test
    pnpm run build
-   npm pack          # ui-filesystem-0.1.0.tgz
+   npm pack          # ui-filesystem-0.1.1.tgz
    ```
 
-2. 安装进 profile：
+2. Install the package into your profile:
 
    ```sh
-   dsh plugin --profile web add ./ui-filesystem-0.1.0.tgz
+   dsh plugin --profile web add ./ui-filesystem-0.1.1.tgz
    ```
 
-3. 在 `$DSH_HOME/profiles/<name>/cordis.patch.yml` 挂载：
+   (or from the profile directory: `corepack pnpm add ./ui-filesystem-0.1.1.tgz --dir <profile-dir>`)
+
+3. Mount it in `$DSH_HOME/profiles/<name>/cordis.patch.yml`:
 
    ```yaml
    - insert:
@@ -46,7 +50,7 @@
          name: ui-filesystem
    ```
 
-4. **重启 profile**（新增插件的发现需要重启），打开任意会话，输入 `@` 即可看到 filesystem 分组。
+4. Restart the profile (new plugins are discovered at boot), open any session, and type `@`.
 
 ## Verify
 
@@ -54,21 +58,25 @@
 dsh --profile <name> --dump-config | Select-String ui-filesystem
 ```
 
-重启后：`@` 弹出 filesystem 分组（前名后路径）→ basename 前缀过滤 → 选中插入 `@路径 ` → 发送后模型可读该文件。
+After the restart: `@` opens the `filesystem` group (name first, path after) → basename-prefix filtering → picking inserts `@path ` → the model can read the file from the prompt literal.
 
-## Config（可选）
+## Config (optional)
 
-在 profile 的 `cordis.patch.yml` 挂载行配置遍历边界：
+Tune the walk bounds on the mount row in `cordis.patch.yml`:
 
 ```yaml
 - insert:
     - id: ui-filesystem
       name: ui-filesystem
       config:
-        maxDepth: 6          # 最大路径深度（默认 6）
-        maxEntries: 2000     # 总条目上限（默认 2000）
-        skipHidden: true     # 跳过点开头条目（默认 true）
-        skipPatterns:        # 按 basename 精确跳过的目录/文件（默认 node_modules、.git）
+        maxDepth: 6          # max path-segment depth (default 6)
+        maxEntries: 2000     # total entry cap (default 2000)
+        skipHidden: true     # skip dot-prefixed entries (default true)
+        skipPatterns:        # basename exact-match skip patterns (default node_modules, .git)
           - node_modules
           - .git
 ```
+
+## License
+
+[Apache-2.0](LICENSE)
