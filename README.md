@@ -1,8 +1,35 @@
 # ui-filesystem
 
+**English** · [中文](README.zh.md)
+
 A dsh plugin that adds **`@` project file/directory suggestions** to the chat composer: type `@` to browse the current project (the session's working directory), pick a file or directory, and the draft gains a `@path` reference that ships to the model verbatim.
 
 Built as a fully out-of-tree plugin — the deepseek-harness source stays untouched. It rides the same input-trigger pipeline as ui-skill's `/` (so it coexists with ui-subagent's `@` mentions as a second menu group), and it serves its project tree over its own HTTP route (`ctx.webServer`).
+
+## Install
+
+1. Install the plugin from npm (published as `@dsh-mixxed/dsh-client-ui-filesystem`):
+
+   ```sh
+   dsh plugin --profile web add @dsh-mixxed/dsh-client-ui-filesystem
+   ```
+
+   The package declares `dsh.bundle` (its bundled `cordis.patch.yml`), so `dsh plugin add` automatically appends it to the profile's `dsh.profile.bundles` layer stack and the plugin mounts on the next boot — **no manual `cordis.patch.yml` editing**.
+
+   Upgrading an install that predates the bundle declaration: remove the legacy `ui-filesystem` row from `$DSH_HOME/profiles/<name>/cordis.patch.yml` — the bundle layer now supplies it, and leaving both would mount the id twice.
+
+2. Restart the profile (new plugins are discovered at boot), open any session, and type `@`.
+
+### Building from source (development / offline)
+
+```sh
+pnpm install
+pnpm run typecheck
+pnpm test
+pnpm run build
+npm pack          # produces dsh-mixxed-dsh-client-ui-filesystem-<version>.tgz
+dsh plugin --profile web add ./dsh-mixxed-dsh-client-ui-filesystem-<version>.tgz
+```
 
 ## Features
 
@@ -22,61 +49,30 @@ Built as a fully out-of-tree plugin — the deepseek-harness source stays untouc
 - **No menu group title**: the harness menu renders a raw per-source title row (the `slash.menu` dictionary is exclusively owned by the harness); since `@` shows only this plugin's group, the title row is hidden with one injected CSS rule.
 - Full boundary list: `DESIGN.md` §7.
 
-## Install
-
-1. Build and pack the plugin:
-
-   ```sh
-   pnpm install
-   pnpm run typecheck
-   pnpm test
-   pnpm run build
-   npm pack          # dsh-mixxed-dsh-client-ui-filesystem-0.1.2.tgz
-   ```
-
-2. Install the package into your profile:
-
-   ```sh
-   dsh plugin --profile web add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.2.tgz
-   ```
-
-   (or from the profile directory: `corepack pnpm add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.2.tgz --dir <profile-dir>`)
-
-   (or once published to npm: `corepack pnpm add @dsh-mixxed/dsh-client-ui-filesystem --dir <profile-dir>`)
-
-3. Mount it in `$DSH_HOME/profiles/<name>/cordis.patch.yml`:
-
-   ```yaml
-   - insert:
-       - id: ui-filesystem
-         name: "@dsh-mixxed/dsh-client-ui-filesystem"
-   ```
-
-4. Restart the profile (new plugins are discovered at boot), open any session, and type `@`.
-
 ## Verify
 
 ```sh
 dsh --profile <name> --dump-config | Select-String ui-filesystem
 ```
 
+The composed config shows the `ui-filesystem` row, and `$DSH_HOME/profiles/<name>/package.json` lists `@dsh-mixxed/dsh-client-ui-filesystem` under `dsh.profile.bundles` (auto-appended by `dsh plugin add`).
+
 After the restart: `@` opens the `filesystem` group (name first, path after) → basename-prefix filtering → picking inserts `@path ` → the model can read the file from the prompt literal.
 
 ## Config (optional)
 
-Tune the walk bounds on the mount row in `cordis.patch.yml`:
+Tune the walk bounds from your profile's own `cordis.patch.yml` — the user layer is applied after the bundle layer, so an id-targeted patch overrides the bundled mount row:
 
 ```yaml
-- insert:
-    - id: ui-filesystem
-      name: ui-filesystem
-      config:
-        maxDepth: 6          # max path-segment depth (default 6)
-        maxEntries: 2000     # total entry cap (default 2000)
-        skipHidden: true     # skip dot-prefixed entries (default true)
-        skipPatterns:        # basename exact-match skip patterns (default node_modules, .git)
-          - node_modules
-          - .git
+- id: ui-filesystem
+  name: "@dsh-mixxed/dsh-client-ui-filesystem"
+  config:
+    maxDepth: 6          # max path-segment depth (default 6)
+    maxEntries: 2000     # total entry cap (default 2000)
+    skipHidden: true     # skip dot-prefixed entries (default true)
+    skipPatterns:        # basename exact-match skip patterns (default node_modules, .git)
+      - node_modules
+      - .git
 ```
 
 ## License

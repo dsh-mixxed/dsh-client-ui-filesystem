@@ -110,16 +110,14 @@ ui-filesystem/                  # D:\Codes\ui-filesystem
 
 ```sh
 pnpm run typecheck && pnpm test && pnpm run build && npm pack
-dsh plugin --profile <name> add ./ui-filesystem-0.1.0.tgz
-# $DSH_HOME/profiles/<name>/cordis.patch.yml insert:
-# - insert:
-#     - id: ui-filesystem
-#       name: ui-filesystem
-dsh --profile <name> --dump-config   # 确认行进入组合树
+# 包声明 dsh.bundle.patch（包内 cordis.patch.yml），dsh plugin add 自动追加进
+# profile 的 dsh.profile.bundles，下次启动自动挂载——无需手改 cordis.patch.yml
+dsh plugin --profile <name> add ./dsh-mixxed-dsh-client-ui-filesystem-<version>.tgz
+dsh --profile <name> --dump-config   # 确认行进入组合树（含 # == @dsh-mixxed/... 层注释）
 ```
 
 - 测试用独立 profile + 独立端口（3080 被用户 web 实例占用 → 3800），重新验证前清残留实例。
-- 插件集变更需重启 profile 才被发现（client `pkgMeta` 缓存）；以 `/plugins/ui-filesystem/client.js` 可 serve 为准，不要假设。
+- 插件集变更需重启 profile 才被发现（client `pkgMeta` 缓存）；以 `/plugins/@dsh-mixxed/dsh-client-ui-filesystem/client.js` 可 serve 为准，不要假设。
 - 端到端验证点：`@` 弹出 filesystem 组 → basename 前缀过滤 → 前名后路径渲染 → 选中插入 `@路径 ` → 发送后 prompt 含该字面量 → 模型可读文件。
 - 改名后旧路由返回 200 可能是 SPA fallback（index.html），需区分。
 

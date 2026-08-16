@@ -45,9 +45,11 @@ git push origin master --tags
 
 4. **2FA**：账号已启用 2FA，但发布无需验证码——`.npmrc` 已有 bypass-2FA granular token（`//registry.npmjs.org/:_authToken`）。若 `npm publish` 报 `E403 ... bypass 2fa`：让用户去 https://www.npmjs.com/settings/dragons96999/tokens 重新生成带 "Bypass 2FA" 的 token 并 `npm config set //registry.npmjs.org/:_authToken=npm_xxx`。
 
-5. **发布物清单**：`files: ["lib"]` + 自动包含 LICENSE、README.md、README.zh.md、package.json（共 8 个文件，约 18 kB）。`*.tgz` 已被 gitignore。
+5. **发布物清单**：`files: ["lib", "cordis.patch.yml"]` + 自动包含 LICENSE、README.md、README.zh.md、package.json（共 9 个文件）。**`cordis.patch.yml` 必须随包发布**——`dsh.bundle.patch` 指向它，缺了 profile 启动会报错。`*.tgz` 已被 gitignore。
 
 6. **README 同步**：版本号相关示例（tgz 文件名、安装命令）若随版本变化，需同步更新 README.md 与 README.zh.md（双语一致）。
+
+7. **bundle 自动挂载**：包声明 `dsh.bundle.patch`（指向包内 `cordis.patch.yml`）后，`dsh plugin --profile <name> add <pkg>` 的 reconcile 步骤会自动把包追加进 profile 的 `dsh.profile.bundles`，下次启动即挂载——用户无需手改 `cordis.patch.yml`（该文件是用户层，CLI 永不自动改写，这是设计使然）。补丁内 `name` 必须是 scoped 包名且**加引号**（`@` 是 YAML 保留字符）。验证命令：`dsh --profile <name> --dump-config | Select-String ui-filesystem` + 检查 profile package.json 的 `dsh.profile.bundles`。
 
 ## 账号对照
 

@@ -19,7 +19,8 @@
     "suggestions"
   ],
   "files": [
-    "lib"
+    "lib",
+    "cordis.patch.yml"
   ],
   "exports": {
     ".": "./lib/index.js",
@@ -34,6 +35,9 @@
         "@deepseek-ai/dsh-client-ui-input-trigger",
         "@deepseek-ai/dsh-client-ui-slots"
       ]
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
     }
   },
   "scripts": {
