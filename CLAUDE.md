@@ -1,7 +1,3 @@
-# CLAUDE.md — 项目记忆（给 AI 协作者）
-
-本文件是 AI 协作者的**持久记忆**，每次会话开始应阅读。记录本项目的重要约定、发布流程与踩坑记录。
-
 ## 项目概况
 
 - 包名：`@dsh-mixxed/dsh-client-ui-filesystem`（npm 公共源，Apache-2.0）
