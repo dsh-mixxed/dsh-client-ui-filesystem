@@ -31,23 +31,25 @@
    pnpm run typecheck
    pnpm test
    pnpm run build
-   npm pack          # dsh-client-ui-filesystem-0.1.1.tgz
+   npm pack          # dsh-mixxed-dsh-client-ui-filesystem-0.1.1.tgz
    ```
 
 2. 安装进 profile：
 
    ```sh
-   dsh plugin --profile web add ./dsh-client-ui-filesystem-0.1.1.tgz
+   dsh plugin --profile web add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.1.tgz
    ```
 
-   （或从 profile 目录：`corepack pnpm add ./dsh-client-ui-filesystem-0.1.1.tgz --dir <profile-dir>`）
+   （或从 profile 目录：`corepack pnpm add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.1.tgz --dir <profile-dir>`）
+
+   （或发布到 npm 后：`corepack pnpm add @dsh-mixxed/dsh-client-ui-filesystem --dir <profile-dir>`）
 
 3. 在 `$DSH_HOME/profiles/<name>/cordis.patch.yml` 挂载：
 
    ```yaml
    - insert:
        - id: ui-filesystem
-         name: ui-filesystem
+         name: @dsh-mixxed/dsh-client-ui-filesystem
    ```
 
 4. **重启 profile**（新增插件的发现需要重启），打开任意会话，输入 `@` 即可看到 filesystem 分组。

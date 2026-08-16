@@ -10,7 +10,11 @@
 
 import { build } from 'esbuild'
 
-const PKG_ID = 'ui-filesystem'
+// Client-modules entry id — the npm package name (client-modules keys the boot
+// graph, the /plugins/<id>/client.js route and the __ModuleLoader__
+// registration by the loader entry's package name). NOT the cordis plugin id,
+// which stays 'ui-filesystem' (exported `name` in src/index.ts).
+const PKG_ID = '@dsh-mixxed/dsh-client-ui-filesystem'
 
 /** The browser module table the shell seeds (harness PLATFORM_MODULES). */
 const PLATFORM_MODULES = [

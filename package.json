@@ -1,9 +1,23 @@
 {
-  "name": "dsh-client-ui-filesystem",
+  "name": "@dsh-mixxed/dsh-client-ui-filesystem",
   "version": "0.1.1",
   "description": "Out-of-tree dsh plugin: '@' project file/directory suggestions and plain-text references in the chat composer.",
   "type": "module",
   "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dsh-mixxed/dsh-client-ui-filesystem.git"
+  },
+  "keywords": [
+    "dsh",
+    "plugin",
+    "deepseek",
+    "filesystem",
+    "suggestions"
+  ],
   "files": [
     "lib"
   ],
@@ -24,6 +38,7 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "prepack": "npm run build",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "pack": "npm pack"
