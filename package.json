@@ -1,6 +1,6 @@
 {
   "name": "@dsh-mixxed/dsh-client-ui-filesystem",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Out-of-tree dsh plugin: '@' project file/directory suggestions and plain-text references in the chat composer.",
   "type": "module",
   "license": "Apache-2.0",
