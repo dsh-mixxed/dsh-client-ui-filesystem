@@ -19,7 +19,7 @@ Built as a fully out-of-tree plugin — the deepseek-harness source stays untouc
 - **Where `@` triggers**: the trigger char must sit at the start of the draft, after whitespace, or after punctuation. A Chinese character directly before `@` does **not** trigger (`请查看@index` is a miss; `请查看，@index` works) — the trigger detector treats CJK letters as word characters. That rule lives in the harness's `ui-input-trigger`; this plugin does not modify the harness, so inline references work best with a space or punctuation before `@`.
 - **Loading state**: while the project tree loads, the menu opens immediately with the group's existing text-only loading row (`正在加载…`); an animated spinner would require modifying the harness menu component, which this plugin does not do.
 - **No chip decoration**: `@path` stays plain text in the draft — the decoration scanner only matches word-ish names, so paths never render as chips (DESIGN.md §7.1).
-- **Menu group title**: shows the raw source name `filesystem`.
+- **No menu group title**: the harness menu renders a raw per-source title row (the `slash.menu` dictionary is exclusively owned by the harness); since `@` shows only this plugin's group, the title row is hidden with one injected CSS rule.
 - Full boundary list: `DESIGN.md` §7.
 
 ## Install
@@ -31,16 +31,16 @@ Built as a fully out-of-tree plugin — the deepseek-harness source stays untouc
    pnpm run typecheck
    pnpm test
    pnpm run build
-   npm pack          # dsh-mixxed-dsh-client-ui-filesystem-0.1.1.tgz
+   npm pack          # dsh-mixxed-dsh-client-ui-filesystem-0.1.2.tgz
    ```
 
 2. Install the package into your profile:
 
    ```sh
-   dsh plugin --profile web add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.1.tgz
+   dsh plugin --profile web add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.2.tgz
    ```
 
-   (or from the profile directory: `corepack pnpm add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.1.tgz --dir <profile-dir>`)
+   (or from the profile directory: `corepack pnpm add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.2.tgz --dir <profile-dir>`)
 
    (or once published to npm: `corepack pnpm add @dsh-mixxed/dsh-client-ui-filesystem --dir <profile-dir>`)
 

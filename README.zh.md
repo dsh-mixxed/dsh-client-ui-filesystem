@@ -19,7 +19,7 @@
 - **`@` 的触发位置**：`@` 必须位于行首、空白或标点之后。中文汉字后直接跟 `@` 不会触发（如「请查看@index」无效；「请查看，@index」有效）——触发检测把汉字视为单词字符，该规则在 harness 的 `ui-input-trigger` 中，本插件按约定不改 harness。行内引用建议在 `@` 前加空格或标点。
 - **加载中状态**：项目树首次加载期间，菜单立即弹出并显示「正在加载…」文字行（菜单组件的既有行为，无动画；动画需改 harness 菜单组件，本插件不改）。
 - **无 chip 装饰**：`@路径` 在草稿中不渲染为 chip（装饰扫描只支持单词字符名，见 DESIGN.md §7.1）。
-- **菜单分组标题**：显示原始名 `filesystem`。
+- **菜单无分组标题**：harness 菜单会为每个源渲染一行原始名标题（`slash.menu` 字典由 harness 独占）；`@` 菜单只有本插件一个分组，插件注入一条 CSS 规则隐藏该标题行。
 - 已知限制详情：`DESIGN.md` §7。
 
 ## Install
@@ -31,16 +31,16 @@
    pnpm run typecheck
    pnpm test
    pnpm run build
-   npm pack          # dsh-mixxed-dsh-client-ui-filesystem-0.1.1.tgz
+   npm pack          # dsh-mixxed-dsh-client-ui-filesystem-0.1.2.tgz
    ```
 
 2. 安装进 profile：
 
    ```sh
-   dsh plugin --profile web add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.1.tgz
+   dsh plugin --profile web add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.2.tgz
    ```
 
-   （或从 profile 目录：`corepack pnpm add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.1.tgz --dir <profile-dir>`）
+   （或从 profile 目录：`corepack pnpm add ./dsh-mixxed-dsh-client-ui-filesystem-0.1.2.tgz --dir <profile-dir>`）
 
    （或发布到 npm 后：`corepack pnpm add @dsh-mixxed/dsh-client-ui-filesystem --dir <profile-dir>`）
 

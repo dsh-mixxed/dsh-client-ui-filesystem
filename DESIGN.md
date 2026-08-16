@@ -29,7 +29,7 @@
 | host 侧解析会话项目根 | ✅ 可行 | `ctx.sessions.get(sessionId)` → `session.header.cwd`（绝对路径；`packages/core/session/src/index.ts` + `types.ts`；apiproxy `skills.list` 同款 stance：客户端绝不提交裸路径） |
 | host 侧文件枚举 | ✅ 可行 | `ctx.fs`（`@deepseek-ai/dsh-fs`，base bundle 挂载 `dsh-fs-sandbox`）：`resolve(path)` → target，`listDir(target)` → `FsDirEntry[]`（`name`/`type`/`target`，稳定名称序） |
 | host→浏览器数据通道 | ✅ 可行 | `ctx.webServer.register({ kind: 'prefix', path, handler })`（`packages/host/webserver/src/index.ts`；ui-settings-skills 已验证） |
-| 菜单组标题本地化 | ⚠️ 不可（第三方源限制） | `slash.menu` 命名空间由 ui-input-trigger 独占注册（locale `register` 对重复 (ns, locale) 抛错）；未知 key 的查找链返回原 key（`MenuView.tsx` 明示第三方源显示原始名）。故组标题显示 `filesystem` |
+| 菜单组标题 | ✅ 已处理（隐藏） | `slash.menu` 命名空间由 ui-input-trigger 独占注册（locale `register` 对重复 (ns, locale) 抛错），未知 key 的查找链返回原 key（`MenuView.tsx`）→ 第三方源无法本地化标题。`@` 菜单只有本插件一个组，标题行纯属噪音：插件注入一条 CSS 规则隐藏该源标题行（`[role="listbox"] [data-source="filesystem"][role="presentation"]`，标题行带 `data-source` + `role="presentation"`，loading 行无 `role` 不受影响） |
 | 会话级目录缓存 | ✅ 可行 | ui-skill 的 `CatalogFetch` 模式（单飞行、abort、`connection/reset` 清空）原样复刻，仅把 RPC 换成 fetch |
 
 ## 4. 架构总览
@@ -75,7 +75,7 @@ GET /plugin/ui-filesystem/tree?sessionId=<id>
 ## 7. 诚实边界（必须接受）
 
 1. **无 chip 装饰**：plain-text 引用的装饰扫描正则 `/(^|\s)([/@])([\w-]+)/g`（`ui-conversation/src/client/input/decorations.ts`）只匹配单词字符，无法匹配含 `/` 与 `.` 的路径。故本插件**不实现 `lexicon`/`subscribeLexicon`**——插进去也扫不出来，反而可能造成部分匹配的误导装饰。`@src/index.ts` 在草稿与 prompt 中为纯文本。
-2. **菜单组标题为原始名**：`filesystem`（`slash.menu` 命名空间独占，见 §3 表格）。
+2. **菜单无组标题**：`slash.menu` 命名空间由 ui-input-trigger 独占（见 §3 表格），第三方源无法本地化标题；标题行默认回退显示原始名 `filesystem`。插件注入一条 CSS 规则隐藏该行（选择器只可能命中本源标题行），`@` 菜单不再显示 `filesystem`。
 3. **路径式查询无结果**：按需求只匹配 basename 前缀，`@src/` 这类含 `/` 的查询自然为空（菜单关闭）。这是需求的直接语义，不是缺陷；未来如需 IDE 式目录导航属新需求。
 4. **同 basename 多文件**：候选 `name` 相同（React 列表 key 相同）。受击键过滤的同一性约束（同 basename 条目必然同时匹配/不匹配）与稳定排序保护，实践中渲染正确；控制台可能出现重复 key 警告，属 harness 菜单实现细节（ui-subagent 的同名子代理标题已存在同类情况）。
 5. **树快照有界且会过期**：遍历受深度/条目上限约束，超大仓库只能提示前 N 项；树按会话缓存，会话期间文件增删不实时反映（与 ui-skill 的目录缓存同一取舍）。`connection/reset` 清缓存。

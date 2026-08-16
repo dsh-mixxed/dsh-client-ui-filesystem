@@ -94,6 +94,71 @@ describe('apply', () => {
   })
 })
 
+describe('menu group title hide', () => {
+  /** Minimal head/document fake: records appended tags; tag.remove() detaches. */
+  function fakeDom() {
+    const tags: Array<{ textContent: string; dataset: Record<string, string>; remove: () => void }> = []
+    const doc = {
+      head: {
+        appendChild(node: { textContent: string; dataset: Record<string, string>; remove: () => void }) {
+          tags.push(node)
+        },
+        querySelector: () => tags[0] ?? null,
+      },
+      createElement(_tag: string) {
+        const node = {
+          textContent: '',
+          dataset: {} as Record<string, string>,
+          remove() {
+            const index = tags.indexOf(node)
+            if (index >= 0) tags.splice(index, 1)
+          },
+        }
+        return node
+      },
+    }
+    return { doc, tags }
+  }
+
+  const HIDE_CSS = '[role="listbox"] [data-source="filesystem"][role="presentation"] { display: none; }'
+
+  it('injects one style hiding the source\'s group-title row; disposal removes it (HMR safety)', async () => {
+    const { doc, tags } = fakeDom()
+    vi.stubGlobal('document', doc)
+    const ctx = new Context()
+    ctx.provide('inputTriggers', { registerSource: () => () => {} })
+    vi.stubGlobal('fetch', treeFetch(TREE).fetchMock)
+    const fiber = ctx.plugin({ inject: [...inject], apply })
+    await fiber.await()
+    expect(tags).toHaveLength(1)
+    expect(tags[0].textContent).toBe(HIDE_CSS)
+    // The rule can only match the menu title row of this source, never the
+    // loading row (no role) or other sources' titles (different data-source).
+    await fiber.dispose()
+    expect(tags).toHaveLength(0)
+  })
+
+  it('reuses an existing hide style instead of duplicating it', async () => {
+    const { doc, tags } = fakeDom()
+    vi.stubGlobal('document', doc)
+    const ctx = new Context()
+    ctx.provide('inputTriggers', { registerSource: () => () => {} })
+    vi.stubGlobal('fetch', treeFetch(TREE).fetchMock)
+    const fiber = ctx.plugin({ inject: [...inject], apply })
+    await fiber.await()
+    const second = ctx.plugin({ inject: [...inject], apply })
+    await second.await()
+    expect(tags).toHaveLength(1)
+    await second.dispose()
+    expect(tags).toHaveLength(0)
+  })
+
+  it('skips the injection when there is no DOM (node-side boot)', async () => {
+    const { source } = await bench()
+    expect(source.name).toBe('filesystem')
+  })
+})
+
 describe('candidates: sessionId addressing and basename-prefix filtering', () => {
   it('fetches the tree once per session and filters by basename prefix', async () => {
     const { source, urls } = await bench()

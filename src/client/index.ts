@@ -19,7 +19,12 @@
  * No lexicon: the draft decoration scan matches word-ish names only
  * (/(^|\s)([/@])([\w-]+)/g), so '@' + paths never decorate — the reference
  * stays plain text by design. No adjudication hooks: file references never
- * enter command adjudication.
+ * enter command adjudication. No menu title: the harness menu renders one
+ * per-source group-title row (`t(group.source)`, falling back to the raw
+ * source name — the `slash.menu` namespace is exclusively owned by
+ * ui-input-trigger, so a third-party source cannot localize it); with '@'
+ * this plugin is the only group, so the raw `filesystem` title row is pure
+ * noise and gets hidden by one injected CSS rule (see apply).
  */
 
 // Type-only: the runtime context and the trigger-source contract.
@@ -40,6 +45,21 @@ const MAX_CANDIDATES = 50
 
 /** Pause before one retry of a failed tree fetch (host session attach race). */
 const RETRY_DELAY_MS = 300
+
+/**
+ * Hide the trigger menu's group-title row for this source. The harness menu
+ * renders one title row per source group; for a source without a
+ * `slash.menu` dictionary entry it shows the raw source name. The title row
+ * carries `data-source` and `role="presentation"` (the pending loading row
+ * keeps `role` absent and stays visible), and the whole menu is the only
+ * `role="listbox"` overlay in the composer — so the selector below can only
+ * match this plugin's own title row, never other sources' rows.
+ */
+const MENU_TITLE_HIDE_CSS =
+  '[role="listbox"] [data-source="filesystem"][role="presentation"] { display: none; }'
+
+/** Stable marker on the injected style tag (dedupe + teardown handle). */
+const MENU_TITLE_HIDE_TAG_SELECTOR = 'style[data-ui-filesystem="menu-title-hide"]'
 
 /** One session's tree fetch: the shared promise plus its own abort handle. */
 interface TreeFetch {
@@ -154,4 +174,19 @@ export function apply(ctx: ClientContext): void {
       clearAll()
     }
   }, 'ui-filesystem: @ source')
+  ctx.effect(() => {
+    // Node (unit tests) has no DOM; in the browser inject one style tag
+    // (deduped by its stable attribute) hiding this source's group-title
+    // row. The tag dies with the fiber, so re-apply (HMR) is safe.
+    if (typeof document === 'undefined') return () => {}
+    const existing = document.head.querySelector<HTMLStyleElement>(MENU_TITLE_HIDE_TAG_SELECTOR)
+    const tag = existing ?? (() => {
+      const created = document.createElement('style')
+      created.dataset.uiFilesystem = 'menu-title-hide'
+      created.textContent = MENU_TITLE_HIDE_CSS
+      document.head.appendChild(created)
+      return created
+    })()
+    return () => { tag.remove() }
+  }, 'ui-filesystem: hide the @ menu group title')
 }
