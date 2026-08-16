@@ -49,7 +49,7 @@ Built as a fully out-of-tree plugin — the deepseek-harness source stays untouc
    ```yaml
    - insert:
        - id: ui-filesystem
-         name: @dsh-mixxed/dsh-client-ui-filesystem
+         name: "@dsh-mixxed/dsh-client-ui-filesystem"
    ```
 
 4. Restart the profile (new plugins are discovered at boot), open any session, and type `@`.

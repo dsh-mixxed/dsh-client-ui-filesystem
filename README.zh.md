@@ -49,7 +49,7 @@
    ```yaml
    - insert:
        - id: ui-filesystem
-         name: @dsh-mixxed/dsh-client-ui-filesystem
+         name: "@dsh-mixxed/dsh-client-ui-filesystem"
    ```
 
 4. **重启 profile**（新增插件的发现需要重启），打开任意会话，输入 `@` 即可看到 filesystem 分组。
