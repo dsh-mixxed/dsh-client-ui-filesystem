@@ -77,4 +77,4 @@ Tune the walk bounds from your profile's own `cordis.patch.yml` — the user lay
 
 ## License
 
-[Apache-2.0](LICENSE)
+[MIT](LICENSE)

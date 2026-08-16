@@ -1,6 +1,6 @@
 ## 项目概况
 
-- 包名：`@dsh-mixxed/dsh-client-ui-filesystem`（npm 公共源，Apache-2.0）
+- 包名：`@dsh-mixxed/dsh-client-ui-filesystem`（npm 公共源，MIT）
 - 用途：dsh 客户端插件——对话窗口 `@` 触发项目文件/目录检索（out-of-tree，harness 零改动）
 - 插件 id：`ui-filesystem`（cordis 插件 id，与包名无关，**保持不变**）
 - 仓库：`github.com/dsh-mixxed/dsh-client-ui-filesystem`（分支 master）

@@ -77,4 +77,4 @@ dsh --profile <name> --dump-config | Select-String ui-filesystem
 
 ## 许可证
 
-[Apache-2.0](LICENSE)
+[MIT](LICENSE)
